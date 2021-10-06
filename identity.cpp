@@ -1,12 +1,12 @@
 /*
-    trace.cpp
+    identity.cpp
 
-    Trace the tokens
+    Identity copy
 */
 
 #include <iostream>
 #include <fstream>
-#include "Comments.h"
+#include "Language.h"
 
 int main(int argc, char* argv[]) {
 
@@ -15,13 +15,13 @@ int main(int argc, char* argv[]) {
     antlr4::ANTLRInputStream input(file);
 
     // setup lexer
-    Comments lexer(&input);
+    Language lexer(&input);
     antlr4::CommonTokenStream tokens(&lexer);
 
     // run lexer
     tokens.fill();
     for (auto token : tokens.getTokens()) {
-        std::cout << token->toString() << '\n';
+        std::cout << token->getText();
     }
 
     return 0;
