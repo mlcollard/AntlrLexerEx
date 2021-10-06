@@ -16,13 +16,13 @@ int main(int argc, char* argv[]) {
 
     // setup lexer
     Language lexer(&input);
-    antlr4::CommonTokenStream tokens(&lexer);
+    antlr4::BufferedTokenStream tokens(&lexer);
 
-    // run lexer
-    tokens.fill();
-    for (auto token : tokens.getTokens()) {
-        std::cout << token->getText();
-    }
+    // // run lexer
+    // tokens.fill();
+    // for (auto token : tokens.getTokens()) {
+    //     std::cout << token->getText();
+    // }
 
     return 0;
 }

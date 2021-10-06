@@ -1,5 +1,9 @@
 lexer grammar Language;
 
+options {
+    language=Cpp;
+}
+
 DEF : 'def' ;
 
 ASYNC : 'async' ;
