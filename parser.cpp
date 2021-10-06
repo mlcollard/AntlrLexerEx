@@ -18,11 +18,14 @@ int main(int argc, char* argv[]) {
     Language lexer(&input);
     antlr4::BufferedTokenStream tokens(&lexer);
 
-    // // run lexer
-    // tokens.fill();
-    // for (auto token : tokens.getTokens()) {
-    //     std::cout << token->getText();
-    // }
+    // parse
+    while (true) {
+
+        if (tokens.LA(1) == Language::EOF)
+            break;
+
+        tokens.consume();
+    }
 
     return 0;
 }
