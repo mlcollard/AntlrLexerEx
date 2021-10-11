@@ -9,7 +9,7 @@
 #include "Language.h"
 
 // (async)? for
-void parseFor(antlr4::BufferedTokenStream& stream) {
+bool parseFor(antlr4::BufferedTokenStream& stream) {
 
     // (ASYNC)?
     if (stream.LA(1) == Language::ASYNC) {
@@ -21,14 +21,14 @@ void parseFor(antlr4::BufferedTokenStream& stream) {
     if (stream.LA(1) == Language::FOR) {
         std::cout << stream.LT(1)->toString();
         stream.consume();
-    } else {
-        std::cerr << "ERROR\n";
-        exit(1);
+        return true;
     }
+
+    return false;
 }
 
 // (async)? def
-void parseDef(antlr4::BufferedTokenStream& stream) {
+bool parseDef(antlr4::BufferedTokenStream& stream) {
 
     // (ASYNC)?
     if (stream.LA(1) == Language::ASYNC) {
@@ -40,62 +40,54 @@ void parseDef(antlr4::BufferedTokenStream& stream) {
     if (stream.LA(1) == Language::DEF) {
         std::cout << stream.LT(1)->toString();
         stream.consume();
-    } else {
-        std::cerr << "ERROR\n";
-        exit(1);
+        return true;
     }
+
+    return false;
 }
 
 // return
-void parseReturn(antlr4::BufferedTokenStream& stream) {
+bool parseReturn(antlr4::BufferedTokenStream& stream) {
 
    if (stream.LA(1) == Language::RETURN) {
         std::cout << stream.LT(1)->toString();
         stream.consume();
-    } else {
-        std::cerr << "ERROR\n";
-        exit(1);
+        return true;
     }
+
+    return false;
 }
 
 // async (def | for)?
-void parseAsync(antlr4::BufferedTokenStream& stream) {
+bool parseAsync(antlr4::BufferedTokenStream& stream) {
 
     // async
     if (stream.LA(1) == Language::ASYNC) {
         std::cout << stream.LT(1)->toString();
         stream.consume();
-    } else {
-        std::cerr << "ERROR\n";
-        exit(1);
+        return true;
     }
 
-    // // (def | for)?
-    // if (stream.LA(1) == Language::DEF) {
-    //     parseDef(stream);
-    // } else if (stream.LA(1) == Language::FOR) {
-    //     parseFor(stream);
-    // }
+    return false;
 }
 
 // (def | return | for | async)
-void parseStart(antlr4::BufferedTokenStream& stream) {
+bool parseStart(antlr4::BufferedTokenStream& stream) {
 
     if (stream.LA(1) == Language::DEF) {
-        parseDef(stream);
+        return parseDef(stream);
     } else if (stream.LA(1) == Language::RETURN) {
-        parseReturn(stream);
+        return parseReturn(stream);
     } else if (stream.LA(1) == Language::FOR) {
-        parseFor(stream);
+        return parseFor(stream);
     } else if (stream.LA(1) == Language::ASYNC && stream.LA(2) == Language::FOR) {
-        parseFor(stream);
+        return parseFor(stream);
     } else if (stream.LA(1) == Language::ASYNC && stream.LA(2) == Language::DEF) {
-        parseDef(stream);
+        return parseDef(stream);
     } else if (stream.LA(1) == Language::ASYNC) {
-        parseAsync(stream);
+        return parseAsync(stream);
     } else {
-        std::cerr << "ERROR\n";
-        exit(1);
+        return false;
     }
 }
 
@@ -115,8 +107,17 @@ int main(int argc, char* argv[]) {
         if (tokens.LA(1) == Language::EOF)
             break;
 
-        parseStart(tokens);
+        if (!parseStart(tokens))
+            break;
+
         std::cout << '\n';
+    }
+
+    // output any remaining tokens
+    while (tokens.LA(1) != Language::EOF) {
+        std::cerr << "Remaining Tokens:\n";
+        std::cerr << tokens.LT(1)->toString() << '\n';
+        tokens.consume();
     }
 
     return 0;
