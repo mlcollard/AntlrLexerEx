@@ -8,18 +8,22 @@
 #include <fstream>
 #include "Language.h"
 
+bool inBackTrace = false;
+
 // (async)? for
 bool parseFor(antlr4::BufferedTokenStream& stream) {
 
     // (ASYNC)?
     if (stream.LA(1) == Language::ASYNC) {
-        std::cout << stream.LT(1)->toString();
+        if (!inBackTrace)
+            std::cout << stream.LT(1)->toString();
         stream.consume();
     }
 
     // FOR
     if (stream.LA(1) == Language::FOR) {
-        std::cout << stream.LT(1)->toString();
+        if (!inBackTrace)
+            std::cout << stream.LT(1)->toString();
         stream.consume();
         return true;
     }
@@ -32,13 +36,15 @@ bool parseDef(antlr4::BufferedTokenStream& stream) {
 
     // (ASYNC)?
     if (stream.LA(1) == Language::ASYNC) {
-        std::cout << stream.LT(1)->toString();
+        if (!inBackTrace)
+            std::cout << stream.LT(1)->toString();
         stream.consume();
     }
 
     // DEF
     if (stream.LA(1) == Language::DEF) {
-        std::cout << stream.LT(1)->toString();
+        if (!inBackTrace)
+            std::cout << stream.LT(1)->toString();
         stream.consume();
         return true;
     }
@@ -50,7 +56,8 @@ bool parseDef(antlr4::BufferedTokenStream& stream) {
 bool parseReturn(antlr4::BufferedTokenStream& stream) {
 
    if (stream.LA(1) == Language::RETURN) {
-        std::cout << stream.LT(1)->toString();
+        if (!inBackTrace)
+            std::cout << stream.LT(1)->toString();
         stream.consume();
         return true;
     }
@@ -63,7 +70,8 @@ bool parseAsync(antlr4::BufferedTokenStream& stream) {
 
     // async
     if (stream.LA(1) == Language::ASYNC) {
-        std::cout << stream.LT(1)->toString();
+        if (!inBackTrace)
+            std::cout << stream.LT(1)->toString();
         stream.consume();
         return true;
     }
@@ -80,12 +88,49 @@ bool parseStart(antlr4::BufferedTokenStream& stream) {
         return parseReturn(stream);
     } else if (stream.LA(1) == Language::FOR) {
         return parseFor(stream);
-    } else if (stream.LA(1) == Language::ASYNC && stream.LA(2) == Language::FOR) {
-        return parseFor(stream);
-    } else if (stream.LA(1) == Language::ASYNC && stream.LA(2) == Language::DEF) {
-        return parseDef(stream);
     } else if (stream.LA(1) == Language::ASYNC) {
+
+        inBackTrace = true;
+
+        // mark
+        auto pos = stream.index();
+
+        // ( (ASYNC)? FOR )=> (ASYNC)? FOR
+        if (parseFor(stream)) {
+            // really parse For
+            inBackTrace = false;
+
+            // rewind
+            stream.seek(pos);
+
+            return parseFor(stream);
+        }
+
+        // rewind
+        stream.seek(pos);
+
+        // ( (ASYNC)? DEF )=> (ASYNC)? DEF
+        if (parseDef(stream)) {
+            // really parse For
+            inBackTrace = false;
+
+            // rewind
+            stream.seek(pos);
+
+            return parseDef(stream);
+        }
+
+        // ASYNC
+        // really parse Async
+        inBackTrace = false;
+
+        // rewind
+        stream.seek(pos);
+
         return parseAsync(stream);
+
+        // return parseDef(stream);
+
     } else {
         return false;
     }
