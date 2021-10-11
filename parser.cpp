@@ -8,10 +8,17 @@
 #include <fstream>
 #include "Language.h"
 
-// for
+// (async)? for
 void parseFor(antlr4::BufferedTokenStream& stream) {
 
-   if (stream.LA(1) == Language::FOR) {
+    // (ASYNC)?
+    if (stream.LA(1) == Language::ASYNC) {
+        std::cout << stream.LT(1)->toString();
+        stream.consume();
+    }
+
+    // FOR
+    if (stream.LA(1) == Language::FOR) {
         std::cout << stream.LT(1)->toString();
         stream.consume();
     } else {
@@ -20,10 +27,17 @@ void parseFor(antlr4::BufferedTokenStream& stream) {
     }
 }
 
-// def
+// (async)? def
 void parseDef(antlr4::BufferedTokenStream& stream) {
 
-   if (stream.LA(1) == Language::DEF) {
+    // (ASYNC)?
+    if (stream.LA(1) == Language::ASYNC) {
+        std::cout << stream.LT(1)->toString();
+        stream.consume();
+    }
+
+    // DEF
+    if (stream.LA(1) == Language::DEF) {
         std::cout << stream.LT(1)->toString();
         stream.consume();
     } else {
@@ -56,12 +70,12 @@ void parseAsync(antlr4::BufferedTokenStream& stream) {
         exit(1);
     }
 
-    // (def | for)?
-    if (stream.LA(1) == Language::DEF) {
-        parseDef(stream);
-    } else if (stream.LA(1) == Language::FOR) {
-        parseFor(stream);
-    }
+    // // (def | for)?
+    // if (stream.LA(1) == Language::DEF) {
+    //     parseDef(stream);
+    // } else if (stream.LA(1) == Language::FOR) {
+    //     parseFor(stream);
+    // }
 }
 
 // (def | return | for | async)
@@ -73,6 +87,10 @@ void parseStart(antlr4::BufferedTokenStream& stream) {
         parseReturn(stream);
     } else if (stream.LA(1) == Language::FOR) {
         parseFor(stream);
+    } else if (stream.LA(1) == Language::ASYNC && stream.LA(2) == Language::FOR) {
+        parseFor(stream);
+    } else if (stream.LA(1) == Language::ASYNC && stream.LA(2) == Language::DEF) {
+        parseDef(stream);
     } else if (stream.LA(1) == Language::ASYNC) {
         parseAsync(stream);
     } else {
