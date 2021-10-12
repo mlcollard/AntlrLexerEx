@@ -9,6 +9,7 @@
 #include "Language.h"
 
 bool inBackTrace = false;
+bool inDef = false;
 
 // (async)? for
 bool parseFor(antlr4::BufferedTokenStream& stream) {
@@ -43,6 +44,22 @@ bool parseDef(antlr4::BufferedTokenStream& stream) {
 
     // DEF
     if (stream.LA(1) == Language::DEF) {
+        inDef = true;
+        if (!inBackTrace)
+            std::cout << stream.LT(1)->toString();
+        stream.consume();
+        return true;
+    }
+
+    return false;
+}
+
+// enddef
+bool parseEnddef(antlr4::BufferedTokenStream& stream) {
+
+    // ENDDEF
+    if (stream.LA(1) == Language::ENDDEF) {
+        inDef = false;
         if (!inBackTrace)
             std::cout << stream.LT(1)->toString();
         stream.consume();
@@ -82,8 +99,10 @@ bool parseAsync(antlr4::BufferedTokenStream& stream) {
 // (def | return | for | async)
 bool parseStart(antlr4::BufferedTokenStream& stream) {
 
-    if (stream.LA(1) == Language::DEF) {
+    if (!inDef && stream.LA(1) == Language::DEF) {
         return parseDef(stream);
+    } else if (inDef && stream.LA(1) == Language::ENDDEF) {
+        return parseEnddef(stream);
     } else if (stream.LA(1) == Language::RETURN) {
         return parseReturn(stream);
     } else if (stream.LA(1) == Language::FOR) {
@@ -109,8 +128,8 @@ bool parseStart(antlr4::BufferedTokenStream& stream) {
         // rewind
         stream.seek(pos);
 
-        // ( (ASYNC)? DEF )=> (ASYNC)? DEF
-        if (parseDef(stream)) {
+        // { !inDef }? ( (ASYNC)? DEF )=> (ASYNC)? DEF
+        if (!inDef && parseDef(stream)) {
             // really parse For
             inBackTrace = false;
 

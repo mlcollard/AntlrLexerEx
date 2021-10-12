@@ -6,6 +6,8 @@ options {
 
 DEF : 'def' ;
 
+ENDDEF : 'enddef' ;
+
 ASYNC : 'async' ;
 
 FOR : 'for' ;
